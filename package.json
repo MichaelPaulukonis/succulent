@@ -1,0 +1,64 @@
+{
+  "name": "succulent",
+  "version": "0.0.1",
+  "main": "src/main.js",
+  "scripts": {
+    "dev": "npm start",
+    "start": "webpack-dev-server --watch",
+    "build": "npm run clean && webpack",
+    "clean": "rm -rf dist",
+    "lint:fix": "standard --fix",
+    "lint": "standard",
+    "deploy": "gh-pages -t -d dist",
+    "bump": "npm version patch",
+    "publish": "npm run bump && DEPLOY_ENV=GH_PAGES npm run build && npm run deploy",
+    "zip:move": "[ ! -f dist ] || mv dist succulent",
+    "zip:clean": "rm -f succulent.zip",
+    "zipit": "npm run zip:move && rm -f succulent/*.map && npm run zip:clean && zip -r succulent ./succulent"
+  },
+  "dependencies": {
+    "@babel/polyfill": "^7.10.4",
+    "@dom-native/draggable": "^0.1.1",
+    "axios": "^0.21.0",
+    "cheerio": "^1.0.0-rc.3",
+    "dom-native": "^0.9.17",
+    "jquery": "^3.5.1",
+    "jquery-ui": "^1.12.1",
+    "stream-browserify": "^3.0.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.10.4",
+    "@babel/preset-env": "^7.10.4",
+    "@babel/register": "^7.10.4",
+    "babel-loader": "^8.1.0",
+    "copy-webpack-plugin": "^6.3.1",
+    "css-loader": "^5.0.1",
+    "dotenv-webpack": "^5.1.0",
+    "eslint-config-p5js": "^1.0.1",
+    "eslint-config-standard": "^14.1.1",
+    "file-loader": "^6.0.0",
+    "gh-pages": "^3.1.0",
+    "html-webpack-plugin": "^4.5.0",
+    "husky": "^4.2.5",
+    "standard": "^14.3.4",
+    "style-loader": "^2.0.0",
+    "webpack": "^4.27.1",
+    "webpack-cli": "^3.1.2",
+    "webpack-dev-server": "^3.1.10"
+  },
+  "standard": {
+    "ignore": [],
+    "extends": [],
+    "plugins": [],
+    "globals": [
+      "VERSION",
+      "IMAGES",
+      "$"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run lint:fix"
+    }
+  }
+}
