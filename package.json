@@ -22,8 +22,6 @@
     "axios": "^0.21.0",
     "cheerio": "^1.0.0-rc.3",
     "dom-native": "^0.9.17",
-    "jquery": "^3.5.1",
-    "jquery-ui": "^1.12.1",
     "stream-browserify": "^3.0.0"
   },
   "devDependencies": {

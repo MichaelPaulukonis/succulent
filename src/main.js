@@ -1,11 +1,10 @@
-import $ from 'jquery'
 import { draggable } from '@dom-native/draggable'
 import defaultText from './default_text.json'
 import tumblrRandomPost from './tumblr_random'
 
-$(document).ready(async function () {
-  var width = $(document).width()
-  var height = $(document).height()
+document.addEventListener('DOMContentLoaded', async function (event) {
+  var width = document.documentElement.clientWidth
+  var height = document.documentElement.clientHeight
 
   let corpus = []
   try {
@@ -14,14 +13,17 @@ $(document).ready(async function () {
     corpus = defaultText.lines
   }
 
-  buildText(corpus)
-
-  var items = $('li').not('#mustshow').get()
+  var lines = corpus
     .sort(_ => Math.round(Math.random()) - 0.5)
-    .slice(0, 30).concat($('#mustshow'))
+    .slice(0, 30)
 
-  reposition(items, width, height)
-  recolor(items)
+  const items = buildText(lines)
+
+  const positionedItems = reposition(items, width, height)
+  const recoloredItems = recolor(positionedItems)
+
+  const list = document.getElementById('page-wrap')
+  list.append(...recoloredItems)
 
   const parent = Array.from(document.getElementsByClassName('dragula'))[0]
   draggable(parent, '.drag-me')
@@ -34,12 +36,11 @@ $(document).ready(async function () {
 })
 
 const buildText = lines => {
-  const parent = document.getElementById('page-wrap')
-  lines.forEach(line => {
+  return lines.map(line => {
     const li = document.createElement('li')
     li.className = 'drag-me potentialText'
     li.textContent = line
-    parent.appendChild(li)
+    return li
   })
 }
 
@@ -56,8 +57,8 @@ const fadeOutEffect = target => {
   }, 400)
 }
 
-function reposition (items, winWidth, winHeight) {
-  for (var i = items.length - 1; i >= 0; --i) {
+const reposition = (items, winWidth, winHeight) => {
+  const decorated = items.map(item => {
     var maxWidth = Math.floor(Math.random() * (winWidth / 2 - 100)) + 100
 
     var xVar = Math.floor((Math.random() * (winWidth - (maxWidth)))) // + (0.5 * maxWidth);            // x value
@@ -66,30 +67,29 @@ function reposition (items, winWidth, winHeight) {
     // size (and opacity will be a function of size)
     var zVar = Math.floor((Math.random() * 450)) + 50 // z value, text get larger.
 
-    $(items[i]).css({
-      position: 'absolute',
-      display: 'block',
-      left: xVar + 'px',
-      top: yVar + 'px',
-      'font-size': zVar + '%',
-      opacity: (zVar) / 600 + 0.1,
-      'max-width': maxWidth
-    })
-  }
+    item.style.position = 'absolute'
+    item.style.display = 'block'
+    item.style.left = `${xVar}px`
+    item.style.top = `${yVar}px`
+    item.style.fontSize = `${zVar}%`
+    item.style.opacity = (zVar) / 600 + 0.1
+    item.style.maxWidth = `${maxWidth}px`
+
+    return item
+  })
+  return decorated
 }
 
-// TODO: would be nice to be able to select some color "schemes" or families....
-// TODO: test these ranges sometime
-var recolor = function (items) {
-  $.each(items, function () {
-    var textColor = 'rgb(' + (Math.floor((256) * Math.random())) +
+const recolor = (items) => {
+  return items.map(item => {
+    item.style.textColor = 'rgb(' + (Math.floor((256) * Math.random())) +
       ',' + (Math.floor((256) * Math.random())) +
       ',' + (Math.floor((256) * Math.random())) + ')'
 
-    var backgroundColor = 'rgb(' + (Math.floor((256) * Math.random())) +
+    item.style.backgroundColor = 'rgb(' + (Math.floor((256) * Math.random())) +
       ',' + (Math.floor((256) * Math.random())) +
       ',' + (Math.floor((256) * Math.random())) + ')'
 
-    $(this).css({ color: textColor, 'background-color': backgroundColor })
+    return item
   })
 }

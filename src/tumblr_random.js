@@ -3,10 +3,6 @@ import axios from 'axios'
 import cheerio from 'cheerio'
 const postCount = 20
 
-const cleanup = text => text
-  .replace(/\s/g, ' ')
-  .replace(/–/g, '--')
-
 const tumblrRandomPost = () => {
   const settings = {
     blogName: 'poeticalbot.tumblr.com',
