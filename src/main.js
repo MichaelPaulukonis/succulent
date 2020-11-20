@@ -1,6 +1,11 @@
 import { draggable } from '@dom-native/draggable'
 import defaultText from './default_text.json'
 import tumblrRandomPost from './tumblr_random'
+import transform from './travesty'
+import dissociater from './dissociater'
+import dissociate from './dissociate'
+import tokenize from './tokenize'
+import rebuild from './rebuild'
 
 document.addEventListener('DOMContentLoaded', async function (event) {
   var width = document.documentElement.clientWidth
@@ -17,7 +22,24 @@ document.addEventListener('DOMContentLoaded', async function (event) {
     .sort(_ => Math.round(Math.random()) - 0.5)
     .slice(0, 30)
 
-  const items = buildText(lines)
+  const bigSample = corpus.join(' ')
+  // for (let i = 0; i <= 3; i++) {
+  //   console.log(transform(bigSample, i))
+  // }
+
+  // const d = dissociater({ str: bigSample, wordMode: false })
+  // console.log(d)
+
+  const d2 = dissociate({ context: 1, buffer: bigSample, fragments: 500 })
+  console.log(d2)
+
+  const tokens = tokenize(d2)
+  const newItems = rebuild(30)(tokens)
+  console.log(JSON.stringify(newItems))
+
+  // const sample = transform(lines.join(' '), 0)
+
+  const items = buildText(newItems)
 
   const positionedItems = reposition(items, width, height)
   const recoloredItems = recolor(positionedItems)
