@@ -5,30 +5,26 @@ function rand (max) {
   return Math.floor(Math.random() * max)
 }
 
-export default function dissociate ({ buffer, context = 2, fragments = 100, start = rand(buffer.length) }) {
-//   if (context === undefined) context = 2
-//   if (fragments === undefined) fragments = 80
-//   if (start === undefined) start = rand(buffer.length)
-
+export default function dissociate ({ text, context = 2, quaver = 16, fragments = 100, start = rand(text.length) }) {
   var point = start
-  var limit = buffer.length
+  var limit = text.length
   var output = ''
-  var upperBuffer = buffer.toUpperCase()
+  var upperBuffer = text.toUpperCase()
 
   for (var i = 0; i < fragments; i++) {
     // Take a slice from nearby.
-    var end = point + context + rand(16)
+    var end = point + context + rand(quaver)
     if (end < limit) {
-      output += buffer.slice(point, end)
+      output += text.slice(point, end)
     } else {
       // wrap around
-      end = 1 + context + rand(16)
-      output += buffer.slice(point)
-      output += buffer.slice(0, end)
+      end = 1 + context + rand(quaver)
+      output += text.slice(point)
+      output += text.slice(0, end)
     }
 
     // Find the overlap sequence after the fragment
-    var overlap = buffer.slice(end - context, end + 1).toUpperCase()
+    var overlap = text.slice(end - context, end + 1).toUpperCase()
     // Jump somewhere random
     point = rand(limit)
     // Look for the next overlap

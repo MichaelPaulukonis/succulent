@@ -11,6 +11,8 @@ const rebuild = count => tokens => {
   const toTake = 5
   for (let i = 0; i < count; i++) {
     const taker = toTake + select(offsets)
+    // TODO: THIS WON'T WORK AT ALL! (wraps to soon, and end is < start)
+    // have a look at dissociate
     const endIndex = tokenIndex + taker % tLength
     frags.push(tokens.slice(tokenIndex, endIndex).join(' '))
     tokenIndex = endIndex

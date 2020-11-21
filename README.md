@@ -2,16 +2,20 @@
 
 It is a project. That is a webpage. With text.
 
-
 ## things
+
 - looks neat <http://cadrpear.tx0.org/wordsalad/salad.html>
 
+### capture output
+
+- JSON of visible items (order?)
+- <https://www.npmjs.com/package/html-to-image>
 
 ### split output
 
 1. to find "words" etc.
 1. break at percentage chance
-2. see charng for example in poetrygen
+1. see charng for example in poetrygen
 
 ```csharp
 public override IList<string> Split(string subject)
