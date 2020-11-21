@@ -3,7 +3,7 @@ import defaultText from './default_text.json'
 import tumblrRandomPost from './tumblr_random'
 import dissociate from './dissociate'
 import tokenize from './tokenize'
-import rebuild from './rebuild'
+import glue from './rebuild'
 import * as htmlToImage from 'html-to-image'
 import download from 'downloadjs'
 
@@ -18,10 +18,12 @@ document.addEventListener('DOMContentLoaded', async function () {
     corpus = defaultText.lines
   }
 
-  const munged = dissociate({ context: 1, quaver: 5, text: corpus.join(' '), fragments: 500 })
+  // TODO: reducing the number of fragments also yields interesting results!
+  // too small of a quaver is annoying
+  const munged = dissociate({ context: 1, quaver: 10, text: corpus.join(' '), fragments: 500 })
 
   const tokens = tokenize(munged)
-  const newItems = rebuild(30)(tokens)
+  const newItems = glue(30)(tokens)
   console.log(JSON.stringify(newItems))
 
   // keep this around, so we can work with them later
