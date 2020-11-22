@@ -1,22 +1,16 @@
 import { draggable } from '@dom-native/draggable'
-import defaultText from './default_text.json'
-import tumblrRandomPost from './tumblr_random'
 import dissociate from './dissociate'
 import tokenize from './tokenize'
 import glue from './rebuild'
 import * as htmlToImage from 'html-to-image'
 import download from 'downloadjs'
+import { getText } from './textManager'
 
 document.addEventListener('DOMContentLoaded', async function () {
   var width = document.documentElement.clientWidth
   var height = document.documentElement.clientHeight
 
-  let corpus = []
-  try {
-    corpus = await tumblrRandomPost()
-  } catch (_) {
-    corpus = defaultText.lines
-  }
+  const corpus = await getText()
 
   // TODO: reducing the number of fragments also yields interesting results!
   // too small of a quaver is annoying
@@ -63,6 +57,7 @@ const fadeOutEffect = (target, width, height) => {
       target.style.opacity -= 0.1
     } else {
       clearInterval(fadeEffect)
+      target.parentElement.removeChild(target)
       htmlToImage.toPng(document.getElementById('page'), { backgroundColor: '#000', width, height })
         .then(function (dataUrl) {
           download(dataUrl, 'my-node.png')
