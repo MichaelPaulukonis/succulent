@@ -1,24 +1,21 @@
 import { draggable } from '@dom-native/draggable'
-// import dissociate from './lib/dissociate'
-// import tokenize from './lib/tokenize'
-// import glue from './lib/rebuild'
 import * as htmlToImage from 'html-to-image'
 import download from 'downloadjs'
+import Mousetrap from 'mousetrap'
 import { getText } from './lib/textManager'
+
+let saver = () => {}
 
 document.addEventListener('DOMContentLoaded', async function () {
   var width = document.documentElement.clientWidth
   var height = document.documentElement.clientHeight
 
-  // const corpus = await getText()
+  saver = saveImage(width, height)
 
-  // // TODO: reducing the number of fragments also yields interesting results!
-  // // too small of a quaver is annoying
-  // const munged = dissociate({ context: 1, quaver: 10, text: corpus.join(' '), fragments: 500 })
-
-  // const tokens = tokenize(munged)
-  // const newItems = glue(30)(tokens)
-  // console.log(JSON.stringify(newItems))
+  Mousetrap.bind('command+s', () => {
+    saver()
+    return false
+  })
 
   // // keep this around, so we can work with them later
   const frags = await getText()
@@ -49,6 +46,13 @@ const buildText = lines => {
   })
 }
 
+const saveImage = (width, height) => () => {
+  htmlToImage.toPng(document.getElementById('page'), { backgroundColor: '#000', width, height })
+    .then(function (dataUrl) {
+      download(dataUrl, 'my-node.png')
+    })
+}
+
 const fadeOutEffect = (target, width, height) => {
   const fadeEffect = setInterval(_ => {
     if (!target.style.opacity) {
@@ -59,11 +63,6 @@ const fadeOutEffect = (target, width, height) => {
     } else {
       clearInterval(fadeEffect)
       target.parentElement.removeChild(target)
-      // TODO: deal with pixelDensity on macs, etc.
-      htmlToImage.toPng(document.getElementById('page'), { backgroundColor: '#000', width, height })
-        .then(function (dataUrl) {
-          download(dataUrl, 'my-node.png')
-        })
     }
   }, 400)
 }
