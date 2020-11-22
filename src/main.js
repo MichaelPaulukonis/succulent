@@ -1,27 +1,28 @@
 import { draggable } from '@dom-native/draggable'
-import dissociate from './dissociate'
-import tokenize from './tokenize'
-import glue from './rebuild'
+// import dissociate from './lib/dissociate'
+// import tokenize from './lib/tokenize'
+// import glue from './lib/rebuild'
 import * as htmlToImage from 'html-to-image'
 import download from 'downloadjs'
-import { getText } from './textManager'
+import { getText } from './lib/textManager'
 
 document.addEventListener('DOMContentLoaded', async function () {
   var width = document.documentElement.clientWidth
   var height = document.documentElement.clientHeight
 
-  const corpus = await getText()
+  // const corpus = await getText()
 
-  // TODO: reducing the number of fragments also yields interesting results!
-  // too small of a quaver is annoying
-  const munged = dissociate({ context: 1, quaver: 10, text: corpus.join(' '), fragments: 500 })
+  // // TODO: reducing the number of fragments also yields interesting results!
+  // // too small of a quaver is annoying
+  // const munged = dissociate({ context: 1, quaver: 10, text: corpus.join(' '), fragments: 500 })
 
-  const tokens = tokenize(munged)
-  const newItems = glue(30)(tokens)
-  console.log(JSON.stringify(newItems))
+  // const tokens = tokenize(munged)
+  // const newItems = glue(30)(tokens)
+  // console.log(JSON.stringify(newItems))
 
-  // keep this around, so we can work with them later
-  const items = buildText(newItems)
+  // // keep this around, so we can work with them later
+  const frags = await getText()
+  const items = buildText(frags)
 
   const positionedItems = reposition(items, width, height)
   const recoloredItems = recolor(positionedItems)
@@ -58,6 +59,7 @@ const fadeOutEffect = (target, width, height) => {
     } else {
       clearInterval(fadeEffect)
       target.parentElement.removeChild(target)
+      // TODO: deal with pixelDensity on macs, etc.
       htmlToImage.toPng(document.getElementById('page'), { backgroundColor: '#000', width, height })
         .then(function (dataUrl) {
           download(dataUrl, 'my-node.png')

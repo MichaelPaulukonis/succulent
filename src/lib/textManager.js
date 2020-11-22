@@ -1,4 +1,4 @@
-import defaultText from './default_text.json'
+import defaultText from '../default_text.json'
 import tumblrRandomPost from './tumblr_random'
 import dissociate from './dissociate'
 import tokenize from './tokenize'
