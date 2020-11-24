@@ -4,25 +4,14 @@ import download from 'downloadjs'
 import Mousetrap from 'mousetrap'
 import { getText } from './lib/textManager'
 
-let saver = () => {}
+let saver = () => { }
+let move = () => { }
 
-document.addEventListener('DOMContentLoaded', async function () {
-  var width = document.documentElement.clientWidth
-  var height = document.documentElement.clientHeight
+const selectSome = arr => toTake => arr.sort(_ => Math.round(Math.random()) - 0.5).slice(0, toTake)
 
-  saver = saveImage(width, height)
-
-  Mousetrap.bind('command+s', () => {
-    saver()
-    return false
-  })
-
-  // // keep this around, so we can work with them later
-  const frags = await getText()
-  const items = buildText(frags)
-
-  const positionedItems = reposition(items, width, height)
-  const recoloredItems = recolor(positionedItems)
+const colorPositionAndDrag = items => {
+  const positionedItems = items.map(move)
+  const recoloredItems = positionedItems.map(recolorItem) // it's not really a new set of items
 
   const list = document.getElementById('page-wrap')
   list.append(...recoloredItems)
@@ -34,14 +23,29 @@ document.addEventListener('DOMContentLoaded', async function () {
     idx++
     evt.target.style.zindex = idx
   })
-  fadeOutEffect(document.getElementById('infobox'), width, height)
-})
+}
 
-const buildText = lines => {
+const clearText = () => {
+  const parent = document.getElementById('page-wrap')
+  while (parent.firstChild) {
+    parent.removeChild(parent.firstChild)
+  }
+}
+
+const createTextElements = async _ => {
+  // // keep this around, so we can work with them later
+  const frags = await getText()
+  const items = buildListElements(frags)
+  return items
+}
+
+const buildListElements = lines => {
   return lines.map(line => {
     const li = document.createElement('li')
     li.className = 'drag-me potentialText'
     li.textContent = line
+    li.style.position = 'absolute'
+    li.style.display = 'block'
     return li
   })
 }
@@ -53,7 +57,7 @@ const saveImage = (width, height) => () => {
     })
 }
 
-const fadeOutEffect = (target, width, height) => {
+const fadeOutEffect = (target) => {
   const fadeEffect = setInterval(_ => {
     if (!target.style.opacity) {
       target.style.opacity = 1
@@ -67,39 +71,68 @@ const fadeOutEffect = (target, width, height) => {
   }, 400)
 }
 
-const reposition = (items, winWidth, winHeight) => {
-  const decorated = items.map(item => {
-    var maxWidth = Math.floor(Math.random() * (winWidth / 2 - 100)) + 100
+const reposition = (winWidth, winHeight) => item => {
+  var maxWidth = Math.floor(Math.random() * (winWidth / 2 - 100)) + 100
 
-    var xVar = Math.floor((Math.random() * (winWidth - (maxWidth)))) // + (0.5 * maxWidth);            // x value
-    var yVar = Math.floor((Math.random() * winHeight - 100)) // y value, but is sometimes off-screen...
+  var xVar = Math.floor((Math.random() * (winWidth - (maxWidth)))) // + (0.5 * maxWidth);            // x value
+  var yVar = Math.floor((Math.random() * winHeight - 100)) // y value, but is sometimes off-screen...
 
-    // size (and opacity will be a function of size)
-    var zVar = Math.floor((Math.random() * 450)) + 50 // z value, text get larger.
+  // size (and opacity will be a function of size)
+  var zVar = Math.floor((Math.random() * 450)) + 50 // z value, text get larger.
 
-    item.style.position = 'absolute'
-    item.style.display = 'block'
-    item.style.left = `${xVar}px`
-    item.style.top = `${yVar}px`
-    item.style.fontSize = `${zVar}%`
-    item.style.opacity = (zVar) / 600 + 0.1
-    item.style.maxWidth = `${maxWidth}px`
+  item.style.left = `${xVar}px`
+  item.style.top = `${yVar}px`
+  item.style.fontSize = `${zVar}%`
+  item.style.opacity = (zVar) / 600 + 0.1
+  item.style.maxWidth = `${maxWidth}px`
 
-    return item
-  })
-  return decorated
+  return item
 }
 
-const recolor = (items) => {
-  return items.map(item => {
-    item.style.textColor = 'rgb(' + (Math.floor((256) * Math.random())) +
-      ',' + (Math.floor((256) * Math.random())) +
-      ',' + (Math.floor((256) * Math.random())) + ')'
+const recolorItem = item => {
+  item.style.textColor = 'rgb(' + (Math.floor((256) * Math.random())) +
+    ',' + (Math.floor((256) * Math.random())) +
+    ',' + (Math.floor((256) * Math.random())) + ')'
 
-    item.style.backgroundColor = 'rgb(' + (Math.floor((256) * Math.random())) +
-      ',' + (Math.floor((256) * Math.random())) +
-      ',' + (Math.floor((256) * Math.random())) + ')'
+  item.style.backgroundColor = 'rgb(' + (Math.floor((256) * Math.random())) +
+    ',' + (Math.floor((256) * Math.random())) +
+    ',' + (Math.floor((256) * Math.random())) + ')'
 
-    return item
-  })
+  return item
 }
+
+document.addEventListener('DOMContentLoaded', async function () {
+  var width = document.documentElement.clientWidth
+  var height = document.documentElement.clientHeight
+
+  saver = saveImage(width, height)
+  move = reposition(width, height)
+
+  Mousetrap.bind('command+s', () => {
+    saver()
+    return false
+  })
+
+  Mousetrap.bind('t', () => {
+    clearText()
+    createTextElements(width, height)
+      .then(colorPositionAndDrag)
+    return false
+  })
+
+  Mousetrap.bind('c', () => {
+    const items = Array.from(document.querySelectorAll('.potentialText'))
+    selectSome(items)(10).map(recolorItem)
+    return false
+  })
+
+  Mousetrap.bind('m', () => {
+    const items = Array.from(document.querySelectorAll('.potentialText'))
+    selectSome(items)(10).map(move)
+    return false
+  })
+
+  createTextElements(width, height)
+    .then(colorPositionAndDrag)
+    .then(_ => fadeOutEffect(document.getElementById('infobox'), width, height))
+})

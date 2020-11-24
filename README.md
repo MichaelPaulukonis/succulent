@@ -13,9 +13,10 @@ It is a project. That is a webpage. With text.
 
 ### split output
 
-1. to find "words" etc.
-1. break at percentage chance
-1. see charng for example in poetrygen
+Looked at but did not use:
+
+- <https://raw.githubusercontent.com/javazen/travesty/master/src/travesty.js>
+- <https://raw.githubusercontent.com/ZVK/Dissociator/master/dissociator.js>
 
 ```csharp
 public override IList<string> Split(string subject)
