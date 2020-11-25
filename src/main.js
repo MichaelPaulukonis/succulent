@@ -13,12 +13,11 @@ const colorPositionAndDrag = items => {
   const positionedItems = items.map(move)
   const recoloredItems = positionedItems.map(recolorItem) // it's not really a new set of items
 
-  const list = document.getElementById('page-wrap')
+  const list = document.getElementById('dragula')
   list.append(...recoloredItems)
 
-  const parent = Array.from(document.getElementsByClassName('dragula'))[0]
-  draggable(parent, '.drag-me')
-  parent.addEventListener('DROP', (evt) => {
+  draggable(list, '.drag-me')
+  list.addEventListener('DROP', (evt) => {
     let idx = evt.target.style.zindex || 0
     idx++
     evt.target.style.zindex = idx
@@ -26,14 +25,13 @@ const colorPositionAndDrag = items => {
 }
 
 const clearText = () => {
-  const parent = document.getElementById('page-wrap')
+  const parent = document.getElementById('dragula')
   while (parent.firstChild) {
     parent.removeChild(parent.firstChild)
   }
 }
 
 const createTextElements = async _ => {
-  // // keep this around, so we can work with them later
   const frags = await getText()
   const items = buildListElements(frags)
   return items

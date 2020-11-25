@@ -6,6 +6,8 @@ import glue from './rebuild'
 
 let _corpus = []
 
+const rand = max => Math.floor(Math.random() * max)
+
 export async function makeCorpus () {
   try {
     _corpus = await tumblrRandomPost()
@@ -24,9 +26,14 @@ export async function getText () {
     _corpus = await makeCorpus()
   }
 
-  // TODO: reducing the number of fragments also yields interesting results!
-  // too small of a quaver is annoying
-  const munged = dissociate({ context: 1, quaver: 10, text: _corpus.join(' '), fragments: 500 })
+  const frgs = [10, 20, 50, 75, 100, 200, 200, 300, 300, 400, 400, 400, 500, 500, 500, 500, 500, 1000, 1000]
+  const fragments = frgs[rand(frgs.length)]
+  const qvs = [1, 2, 5, 7, 10, 10, 10, 10, 15, 20]
+  const quaver = qvs[rand(qvs.length)]
+  const cntxs = [1, 1, 1, 2, 2, 3, 5]
+  const context = cntxs[rand(cntxs.length)]
+  // console.log(`fragSize: ${fragments} quaver: ${quaver} constext: ${context}`)
+  const munged = dissociate({ context, quaver, text: _corpus.join(' '), fragments })
 
   const tokens = tokenize(munged)
   const newItems = glue(30)(tokens)

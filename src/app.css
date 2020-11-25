@@ -33,7 +33,7 @@ li {
 		min-height:50%;
 }
 
-#page-wrap {
+#dragula {
     position: relative;
     /* z-index: 3; */
     background: black;
