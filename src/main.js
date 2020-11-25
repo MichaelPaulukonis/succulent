@@ -8,6 +8,7 @@ let saver = () => { }
 let move = () => { }
 
 const selectSome = arr => toTake => arr.sort(_ => Math.round(Math.random()) - 0.5).slice(0, toTake)
+const tf = _ => Boolean(Math.round(Math.random()))
 
 const colorPositionAndDrag = items => {
   const positionedItems = items.map(move)
@@ -17,10 +18,10 @@ const colorPositionAndDrag = items => {
   list.append(...recoloredItems)
 
   draggable(list, '.drag-me')
-  list.addEventListener('DROP', (evt) => {
-    let idx = evt.target.style.zindex || 0
+  document.getElementById('page').addEventListener('DRAGEND', (evt) => {
+    let idx = evt.target.style.zIndex || 0
     idx++
-    evt.target.style.zindex = idx
+    evt.target.style.zIndex = idx
   })
 }
 
@@ -32,7 +33,7 @@ const clearText = () => {
 }
 
 const createTextElements = async _ => {
-  const frags = await getText()
+  const frags = await getText(30)
   const items = buildListElements(frags)
   return items
 }
@@ -69,7 +70,7 @@ const fadeOutEffect = (target) => {
   }, 400)
 }
 
-const reposition = (winWidth, winHeight) => item => {
+const reposition = (winWidth, winHeight) => transparent => item => {
   var maxWidth = Math.floor(Math.random() * (winWidth / 2 - 100)) + 100
 
   var xVar = Math.floor((Math.random() * (winWidth - (maxWidth)))) // + (0.5 * maxWidth);            // x value
@@ -81,7 +82,7 @@ const reposition = (winWidth, winHeight) => item => {
   item.style.left = `${xVar}px`
   item.style.top = `${yVar}px`
   item.style.fontSize = `${zVar}%`
-  item.style.opacity = (zVar) / 600 + 0.1
+  item.style.opacity = transparent ? (zVar) / 600 + 0.1 : 100
   item.style.maxWidth = `${maxWidth}px`
 
   return item
@@ -104,7 +105,7 @@ document.addEventListener('DOMContentLoaded', async function () {
   var height = document.documentElement.clientHeight
 
   saver = saveImage(width, height)
-  move = reposition(width, height)
+  move = reposition(width, height)(tf())
 
   Mousetrap.bind('command+s', () => {
     saver()

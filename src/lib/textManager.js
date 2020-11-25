@@ -21,7 +21,7 @@ export function corpus () {
   return [..._corpus]
 }
 
-export async function getText () {
+export async function getText (items) {
   if (_corpus.length === 0) {
     _corpus = await makeCorpus()
   }
@@ -33,10 +33,10 @@ export async function getText () {
   const cntxs = [1, 1, 1, 2, 2, 3, 5]
   const context = cntxs[rand(cntxs.length)]
   // console.log(`fragSize: ${fragments} quaver: ${quaver} constext: ${context}`)
-  const munged = dissociate({ context, quaver, text: _corpus.join(' '), fragments })
+  const munged = dissociate({ context, quaver, text: _corpus.join(' ').replace(/\s+/g, ' '), fragments })
 
   const tokens = tokenize(munged)
-  const newItems = glue(30)(tokens)
+  const newItems = glue(items)(tokens)
 
   return newItems
 }
