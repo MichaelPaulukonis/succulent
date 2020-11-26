@@ -6,18 +6,14 @@ import { getText } from './lib/textManager'
 
 let saver = () => { }
 let move = () => { }
-let colors = []
+let _colors = []
 
 const selectSome = arr => toTake => arr.sort(_ => Math.round(Math.random()) - 0.5).slice(0, toTake)
 const tf = _ => Boolean(Math.round(Math.random()))
 
-const colorPositionAndDrag = items => {
-  const positionedItems = items.map(move)
-  // const recoloredItems = positionedItems.map(recolorItem) // it's not really a new set of items
-  const recoloredItems = assignColors(colors)(positionedItems)
-
+const dagify = items => {
   const list = document.getElementById('dragula')
-  list.append(...recoloredItems)
+  list.append(...items)
 
   draggable(list, '.drag-me')
   document.getElementById('page').addEventListener('DRAGEND', (evt) => {
@@ -83,8 +79,17 @@ const reposition = (winWidth, winHeight) => transparent => item => {
 
   item.style.left = `${xVar}px`
   item.style.top = `${yVar}px`
-  item.style.fontSize = `${zVar}%`
   item.style.opacity = transparent ? (zVar) / 600 + 0.1 : 100
+
+  return item
+}
+
+const resize = (winWidth) => item => {
+  var maxWidth = Math.floor(Math.random() * (winWidth / 2 - 100)) + 100
+  // size (and opacity will be a function of size)
+  var zVar = Math.floor((Math.random() * 450)) + 50 // z value, text get larger.
+
+  item.style.fontSize = `${zVar}%`
   item.style.maxWidth = `${maxWidth}px`
 
   return item
@@ -100,18 +105,20 @@ const colorPair = _ => ({
 })
 
 const assignColor = item => color => {
-  item.style.textColor = color.text
+  item.style.color = color.text
   item.style.backgroundColor = color.background
   return item
 }
 
-let colorIndex = 0
-const assignColors = colors => items => {
-  const newItems = items.map((item, i) => {
-    return assignColor(item)(colors[(i + colorIndex) % colors.length])
-  })
-  colorIndex = colorIndex + 1 % colors.length
-  return newItems
+const colorAssigner = colors => {
+  let colorIndex = 0
+  return items => {
+    const newItems = items.map((item, i) => {
+      return assignColor(item)(colors[(i + colorIndex) % colors.length])
+    })
+    colorIndex = colorIndex + 1 % colors.length
+    return newItems
+  }
 }
 
 document.addEventListener('DOMContentLoaded', async function () {
@@ -120,6 +127,10 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   saver = saveImage(width, height)
   move = reposition(width, height)(tf())
+  _colors = new Array(30).fill(1).map(_ => colorPair())
+  const assignColors = colorAssigner(_colors)
+
+  // take apart the colorPositionAndDrag ugh
 
   Mousetrap.bind('command+s', () => {
     saver()
@@ -129,14 +140,21 @@ document.addEventListener('DOMContentLoaded', async function () {
   Mousetrap.bind('t', () => {
     clearText()
     createTextElements(width, height)
-      .then(colorPositionAndDrag)
-    return false
+      .then(items => {
+        items = assignColors(items)
+        items = items.map(resize(width))
+        items = items.map(move)
+        dagify(items)
+
+        return false
+      })
   })
 
   Mousetrap.bind('c', () => {
+    // TODO: figure out a way to break into sub-groups that move/color independently
+    // but stay in the same group
     const items = Array.from(document.querySelectorAll('.potentialText'))
-    assignColors(colors)(items)
-    // selectSome(items)(10).map(recolorItem)
+    assignColors(items)
     return false
   })
 
@@ -146,9 +164,13 @@ document.addEventListener('DOMContentLoaded', async function () {
     return false
   })
 
-  colors = new Array(30).fill(1).map(_ => colorPair())
-
   createTextElements(width, height)
-    .then(colorPositionAndDrag)
-    .then(_ => fadeOutEffect(document.getElementById('infobox'), width, height))
+    .then(items => {
+      items = assignColors(items)
+      items = items.map(resize(width))
+      items = items.map(move)
+      dagify(items)
+
+      fadeOutEffect(document.getElementById('infobox'), width, height)
+    })
 })
