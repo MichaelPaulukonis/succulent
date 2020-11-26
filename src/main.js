@@ -6,13 +6,15 @@ import { getText } from './lib/textManager'
 
 let saver = () => { }
 let move = () => { }
+let colors = []
 
 const selectSome = arr => toTake => arr.sort(_ => Math.round(Math.random()) - 0.5).slice(0, toTake)
 const tf = _ => Boolean(Math.round(Math.random()))
 
 const colorPositionAndDrag = items => {
   const positionedItems = items.map(move)
-  const recoloredItems = positionedItems.map(recolorItem) // it's not really a new set of items
+  // const recoloredItems = positionedItems.map(recolorItem) // it's not really a new set of items
+  const recoloredItems = assignColors(colors)(positionedItems)
 
   const list = document.getElementById('dragula')
   list.append(...recoloredItems)
@@ -88,16 +90,28 @@ const reposition = (winWidth, winHeight) => transparent => item => {
   return item
 }
 
-const recolorItem = item => {
-  item.style.textColor = 'rgb(' + (Math.floor((256) * Math.random())) +
-    ',' + (Math.floor((256) * Math.random())) +
-    ',' + (Math.floor((256) * Math.random())) + ')'
+const r256 = _ => Math.floor((256) * Math.random())
 
-  item.style.backgroundColor = 'rgb(' + (Math.floor((256) * Math.random())) +
-    ',' + (Math.floor((256) * Math.random())) +
-    ',' + (Math.floor((256) * Math.random())) + ')'
+const randomColor = _ => `rgb(${r256()}, ${r256()}, ${r256()})`
 
+const colorPair = _ => ({
+  text: randomColor(),
+  background: randomColor()
+})
+
+const assignColor = item => color => {
+  item.style.textColor = color.text
+  item.style.backgroundColor = color.background
   return item
+}
+
+let colorIndex = 0
+const assignColors = colors => items => {
+  const newItems = items.map((item, i) => {
+    return assignColor(item)(colors[(i + colorIndex) % colors.length])
+  })
+  colorIndex = colorIndex + 1 % colors.length
+  return newItems
 }
 
 document.addEventListener('DOMContentLoaded', async function () {
@@ -121,7 +135,8 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   Mousetrap.bind('c', () => {
     const items = Array.from(document.querySelectorAll('.potentialText'))
-    selectSome(items)(10).map(recolorItem)
+    assignColors(colors)(items)
+    // selectSome(items)(10).map(recolorItem)
     return false
   })
 
@@ -130,6 +145,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     selectSome(items)(10).map(move)
     return false
   })
+
+  colors = new Array(30).fill(1).map(_ => colorPair())
 
   createTextElements(width, height)
     .then(colorPositionAndDrag)
