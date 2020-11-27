@@ -11,7 +11,7 @@ let _colors = []
 const selectSome = arr => toTake => arr.sort(_ => Math.round(Math.random()) - 0.5).slice(0, toTake)
 const tf = _ => Boolean(Math.round(Math.random()))
 
-const dagify = items => {
+const dragify = items => {
   const list = document.getElementById('dragula')
   list.append(...items)
 
@@ -71,11 +71,10 @@ const fadeOutEffect = (target) => {
 const reposition = (winWidth, winHeight) => transparent => item => {
   var maxWidth = Math.floor(Math.random() * (winWidth / 2 - 100)) + 100
 
-  var xVar = Math.floor((Math.random() * (winWidth - (maxWidth)))) // + (0.5 * maxWidth);            // x value
-  var yVar = Math.floor((Math.random() * winHeight - 100)) // y value, but is sometimes off-screen...
+  var xVar = Math.floor((Math.random() * (winWidth - maxWidth)))
+  var yVar = Math.floor((Math.random() * winHeight - 100))
 
-  // size (and opacity will be a function of size)
-  var zVar = Math.floor((Math.random() * 450)) + 50 // z value, text get larger.
+  var zVar = Math.floor((Math.random() * 450)) + 50
 
   item.style.left = `${xVar}px`
   item.style.top = `${yVar}px`
@@ -86,7 +85,6 @@ const reposition = (winWidth, winHeight) => transparent => item => {
 
 const resize = (winWidth) => item => {
   var maxWidth = Math.floor(Math.random() * (winWidth / 2 - 100)) + 100
-  // size (and opacity will be a function of size)
   var zVar = Math.floor((Math.random() * 450)) + 50 // z value, text get larger.
 
   item.style.fontSize = `${zVar}%`
@@ -126,11 +124,23 @@ document.addEventListener('DOMContentLoaded', async function () {
   var height = document.documentElement.clientHeight
 
   saver = saveImage(width, height)
-  move = reposition(width, height)(tf())
+  move = reposition(width, height)(tf()) // also adds transparency, which cannot then be changed
   _colors = new Array(30).fill(1).map(_ => colorPair())
   const assignColors = colorAssigner(_colors)
 
-  // take apart the colorPositionAndDrag ugh
+  const fader = (width, height) => fadeOutEffect(document.getElementById('infobox'), width, height)
+
+  const builder = (width, height, cb) => createTextElements(width, height)
+    .then(items => {
+      items = assignColors(items)
+      items = items.map(resize(width))
+      items = items.map(move)
+      dragify(items)
+
+      if (cb && typeof cb === 'function') { cb() }
+    })
+
+  builder(width, height, fader)
 
   Mousetrap.bind('command+s', () => {
     saver()
@@ -139,15 +149,8 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   Mousetrap.bind('t', () => {
     clearText()
-    createTextElements(width, height)
-      .then(items => {
-        items = assignColors(items)
-        items = items.map(resize(width))
-        items = items.map(move)
-        dagify(items)
-
-        return false
-      })
+    builder(width, height)
+    return false
   })
 
   Mousetrap.bind('c', () => {
@@ -163,14 +166,4 @@ document.addEventListener('DOMContentLoaded', async function () {
     selectSome(items)(10).map(move)
     return false
   })
-
-  createTextElements(width, height)
-    .then(items => {
-      items = assignColors(items)
-      items = items.map(resize(width))
-      items = items.map(move)
-      dagify(items)
-
-      fadeOutEffect(document.getElementById('infobox'), width, height)
-    })
 })
