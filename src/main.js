@@ -10,13 +10,14 @@ let _colors = []
 
 const selectSome = arr => toTake => arr.sort(_ => Math.round(Math.random()) - 0.5).slice(0, toTake)
 const tf = _ => Boolean(Math.round(Math.random()))
+const range = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min
 
 const dragify = items => {
   const list = document.getElementById('dragula')
   list.append(...items)
 
   draggable(list, '.drag-me')
-  document.getElementById('page').addEventListener('DRAGEND', (evt) => {
+  document.getElementById('page').addEventListener('DRAGSTART', (evt) => {
     let idx = evt.target.style.zIndex || 0
     idx++
     evt.target.style.zIndex = idx
@@ -30,16 +31,32 @@ const clearText = () => {
   }
 }
 
+const group = items => {
+  const group1 = range(0, items.length - 3)
+  const group2 = range(group1 + 1, items.length - 2)
+  // const group3 = items.length - 1
+  return items.map((item, idx) => {
+    if (idx <= group1) {
+      item.className += ' group1'
+    } else if (idx <= group2) {
+      item.className += ' group2'
+    } else {
+      item.className += ' group3'
+    }
+    return item
+  })
+}
+
 const createTextElements = async _ => {
   const frags = await getText(30)
   const items = buildListElements(frags)
-  return items
+  return group(items)
 }
 
-const buildListElements = lines => {
-  return lines.map(line => {
+const buildListElements = fragments => {
+  return fragments.map(line => {
     const li = document.createElement('li')
-    li.className = 'drag-me potentialText'
+    li.className = 'drag-me succulentText'
     li.textContent = line
     li.style.position = 'absolute'
     li.style.display = 'block'
@@ -55,10 +72,10 @@ const saveImage = (width, height) => () => {
 }
 
 const fadeOutEffect = (target) => {
+  if (!target.style.opacity) {
+    target.style.opacity = 1
+  }
   const fadeEffect = setInterval(_ => {
-    if (!target.style.opacity) {
-      target.style.opacity = 1
-    }
     if (target.style.opacity > 0) {
       target.style.opacity -= 0.1
     } else {
@@ -142,28 +159,30 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   builder(width, height, fader)
 
-  Mousetrap.bind('command+s', () => {
-    saver()
-    return false
-  })
-
-  Mousetrap.bind('t', () => {
-    clearText()
-    builder(width, height)
-    return false
-  })
-
-  Mousetrap.bind('c', () => {
-    // TODO: figure out a way to break into sub-groups that move/color independently
-    // but stay in the same group
-    const items = Array.from(document.querySelectorAll('.potentialText'))
+  const colorShiftGroup = group => () => {
+    const items = Array.from(document.querySelectorAll(`.succulentText.group${group}`))
     assignColors(items)
     return false
-  })
+  }
 
-  Mousetrap.bind('m', () => {
-    const items = Array.from(document.querySelectorAll('.potentialText'))
-    selectSome(items)(10).map(move)
+  for (let g = 1; g <= 3; g++) {
+    Mousetrap.bind(`${g}`, colorShiftGroup(g))
+  }
+
+  const mouseCommand = fn => _ => {
+    fn()
     return false
-  })
+  }
+
+  Mousetrap.bind('command+s', mouseCommand(saver))
+
+  Mousetrap.bind('t', mouseCommand(() => {
+    clearText()
+    builder(width, height)
+  }))
+
+  Mousetrap.bind('m', mouseCommand(() => {
+    const items = Array.from(document.querySelectorAll('.succulentText'))
+    selectSome(items)(10).map(move)
+  }))
 })
