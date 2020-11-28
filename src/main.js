@@ -159,6 +159,19 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   builder(width, height, fader)
 
+  const shiftShifter = group => {
+    let interval
+    let on = false
+    return () => {
+      if (on) {
+        clearInterval(interval)
+      } else {
+        interval = setInterval(colorShiftGroup(group), 500)
+      }
+      on = !on
+    }
+  }
+
   const colorShiftGroup = group => () => {
     const items = Array.from(document.querySelectorAll(`.succulentText.group${group}`))
     assignColors(items)
@@ -166,8 +179,10 @@ document.addEventListener('DOMContentLoaded', async function () {
   }
 
   for (let g = 1; g <= 3; g++) {
-    Mousetrap.bind(`${g}`, colorShiftGroup(g))
+    Mousetrap.bind(`${g}`, shiftShifter(g))
   }
+
+  // setInterval(colorShiftGroup(2), 1000)
 
   const mouseCommand = fn => _ => {
     fn()
