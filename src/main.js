@@ -3,6 +3,7 @@ import * as htmlToImage from 'html-to-image'
 import download from 'downloadjs'
 import Mousetrap from 'mousetrap'
 import { getText } from './lib/textManager'
+import { vector } from './lib/vector'
 
 let saver = () => { }
 let move = () => { }
@@ -29,6 +30,38 @@ const clearText = () => {
   while (parent.firstChild) {
     parent.removeChild(parent.firstChild)
   }
+}
+
+const makeVecs = ({ winWidth, winHeight, items }) => {
+  const maker = makeVec({ width: winWidth, height: winHeight })
+  const sizer = randomSize(winWidth)
+  const locator = () => {
+    var maxWidth = Math.floor(Math.random() * (winWidth / 2 - 100)) + 100
+
+    var x = Math.floor((Math.random() * (winWidth - maxWidth)))
+    var y = Math.floor((Math.random() * (winHeight - 100)))
+
+    return { x, y }
+  }
+
+  const newItems = items.map(item => {
+    // only thing missing is opacity
+    const location = locator()
+    const size = sizer()
+    return maker({ item, location, size })
+  })
+  return newItems
+}
+
+const makeVec = ({ width, height }) => ({ item, location, size }) => {
+  const vec = vector({
+    item,
+    location,
+    bounding: { width, height },
+    size,
+    direction: { x: range(-5, 5), y: range(-5, 5) }
+  })
+  return vec
 }
 
 const group = items => {
@@ -110,6 +143,15 @@ const resize = (winWidth) => item => {
   return item
 }
 
+const randomSize = (winWidth) => () => {
+  var maxWidth = Math.floor(Math.random() * (winWidth / 2 - 100)) + 100
+  var fontSize = Math.floor((Math.random() * 450)) + 50 // z value, text get larger.
+  return {
+    maxWidth,
+    fontSize
+  }
+}
+
 const r256 = _ => Math.floor((256) * Math.random())
 
 const randomColor = _ => `rgb(${r256()}, ${r256()}, ${r256()})`
@@ -151,8 +193,28 @@ document.addEventListener('DOMContentLoaded', async function () {
     .then(items => {
       items = assignColors(items)
       items = items.map(resize(width))
-      items = items.map(move)
-      dragify(items)
+      const vecItems = makeVecs({ winWidth: width, winHeight: height, items })
+
+      const list = document.getElementById('dragula')
+      list.append(...items)
+
+      const movit = vecs => () => {
+        console.log('moving the group')
+        vecs.forEach(v => v.next())
+      }
+
+      setInterval(movit(vecItems), 100)
+
+      // TODO: looks like this is mostly what we want!
+      // all that is needed is opacity, and something that actually changes the size via CSS props
+
+      // items = assignColors(items)
+      // items = items.map(resize(width))
+      // items = items.map(move)
+
+      // hrm. on end, it has to push the new-location back to the containing vector
+      // ouch. how?
+      // dragify(items)
 
       if (cb && typeof cb === 'function') { cb() }
     })
@@ -182,8 +244,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     Mousetrap.bind(`${g}`, shiftShifter(g))
   }
 
-  // setInterval(colorShiftGroup(2), 1000)
-
   const mouseCommand = fn => _ => {
     fn()
     return false
@@ -196,6 +256,9 @@ document.addEventListener('DOMContentLoaded', async function () {
     builder(width, height)
   }))
 
+  // TODO: this no longer works
+  // have to modify the actual vecs we have saved
+  // since those contain the vals pushed to the DOM
   Mousetrap.bind('m', mouseCommand(() => {
     const items = Array.from(document.querySelectorAll('.succulentText'))
     selectSome(items)(10).map(move)

@@ -10,19 +10,28 @@ const vector = ({
     throw new Error('Value is outside boundaries')
   }
   const self = { item, location: { ...location }, bounding: { ...bounding }, size: { ...size }, direction: { ...direction } }
+  const position = pos => {
+    self.item.style.left = `${pos.x}px`
+    self.item.style.top = `${pos.y}px`
+  }
   self.next = () => {
     const newLocation = {
-      x: self.location.x + direction.x,
-      y: self.location.y + direction.y
+      x: self.location.x + self.direction.x,
+      y: self.location.y + self.direction.y
     }
-
-    self.direction.x = (newLocation.x + self.size.width < self.bounding.x || newLocation.x <= 0) ? self.direction.x : -self.direction.x
-    self.direction.y = (newLocation.y + effectiveHeight < self.bounding.y || newLocation.y <= 0) ? self.direction.y : -self.direction.y
 
     self.location = {
-      x: Math.max(Math.min(newLocation.x, 0), self.bounding.width - self.size.maxWidth),
-      y: Math.max(Math.min(newLocation.y, 0), self.bounding.height - effectiveHeight)
+      x: Math.min(Math.max(newLocation.x, 0), self.bounding.width - self.size.maxWidth),
+      y: Math.min(Math.max(newLocation.y, 0), self.bounding.height - effectiveHeight)
     }
+
+    position(self.location)
+
+    self.direction.x = (newLocation.x + self.size.maxWidth < self.bounding.width && newLocation.x >= 0)
+      ? self.direction.x : -self.direction.x
+    self.direction.y = (newLocation.y + effectiveHeight < self.bounding.height && newLocation.y >= 0)
+      ? self.direction.y : -self.direction.y
+
     return self
   }
   self.set = vec => {
@@ -31,6 +40,7 @@ const vector = ({
     self.diretion = { ...vec.direction }
     self.size = { ...vec.size }
   }
+  position(self.location)
   return self
 }
 

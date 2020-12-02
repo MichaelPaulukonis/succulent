@@ -6,6 +6,12 @@ It is a project. That is a webpage. With text.
 
 - looks neat <http://cadrpear.tx0.org/wordsalad/salad.html>
 
+- rewire boxes slowly
+- don't change ALL the text, just _some_ of it
+- beginning, middle, end
+- keep size the same
+- but that can change some _other_ way....
+
 ### capture output
 
 - JSON of visible items (order?)
