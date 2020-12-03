@@ -8,6 +8,7 @@ import { vector } from './lib/vector'
 let saver = () => { }
 let move = () => { }
 let _colors = []
+let vecs = {}
 
 const selectSome = arr => toTake => arr.sort(_ => Math.round(Math.random()) - 0.5).slice(0, toTake)
 const tf = _ => Boolean(Math.round(Math.random()))
@@ -19,9 +20,18 @@ const dragify = items => {
 
   draggable(list, '.drag-me')
   document.getElementById('page').addEventListener('DRAGSTART', (evt) => {
+    const item = vecs[evt.target.id]
+    item.paused = true
     let idx = evt.target.style.zIndex || 0
     idx++
     evt.target.style.zIndex = idx
+  })
+  document.getElementById('page').addEventListener('DRAGEND', (evt) => {
+    const item = vecs[evt.target.id]
+    const x = parseInt(evt.target.style.left, 10)
+    const y = parseInt(evt.target.style.top, 10)
+    item.setLocation({ x, y })
+    item.paused = false
   })
 }
 
@@ -44,13 +54,14 @@ const makeVecs = ({ winWidth, winHeight, items }) => {
     return { x, y }
   }
 
-  const newItems = items.map(item => {
-    // only thing missing is opacity
+  const vecs = {}
+  items.forEach(item => {
     const location = locator()
     const size = sizer()
-    return maker({ item, location, size })
+    vecs[item.id] = maker({ item, location, size })
   })
-  return newItems
+
+  return vecs
 }
 
 const makeVec = ({ width, height }) => ({ item, location, size }) => {
@@ -86,10 +97,13 @@ const createTextElements = async _ => {
   return group(items)
 }
 
+const randomId = _ => (Math.random() * 0x1000000000).toString(36)
+
 const buildListElements = fragments => {
   return fragments.map(line => {
     const li = document.createElement('li')
     li.className = 'drag-me succulentText'
+    li.id = randomId()
     li.textContent = line
     li.style.position = 'absolute'
     li.style.display = 'block'
@@ -118,19 +132,22 @@ const fadeOutEffect = (target) => {
   }, 400)
 }
 
-const reposition = (winWidth, winHeight) => transparent => item => {
-  var maxWidth = Math.floor(Math.random() * (winWidth / 2 - 100)) + 100
+const randomPosition = (winWidth, winHeight) => vecs => elem => {
+  const maxWidth = Math.floor(Math.random() * (winWidth / 2 - 100)) + 100
 
-  var xVar = Math.floor((Math.random() * (winWidth - maxWidth)))
-  var yVar = Math.floor((Math.random() * winHeight - 100))
+  const x = range(0, winWidth - maxWidth)
+  const y = range(0, winHeight - 100)
 
-  var zVar = Math.floor((Math.random() * 450)) + 50
-
-  item.style.left = `${xVar}px`
-  item.style.top = `${yVar}px`
-  item.style.opacity = transparent ? (zVar) / 600 + 0.1 : 100
+  const item = vecs[elem.id]
+  item.setLocation({ x, y })
 
   return item
+}
+
+const setTransparency = transparentp => elem => {
+  var zVar = Math.floor((Math.random() * 450)) + 50
+  elem.style.opacity = transparentp ? (zVar) / 600 + 0.1 : 100
+  return elem
 }
 
 const resize = (winWidth) => item => {
@@ -183,8 +200,8 @@ document.addEventListener('DOMContentLoaded', async function () {
   var height = document.documentElement.clientHeight
 
   saver = saveImage(width, height)
-  move = reposition(width, height)(tf()) // also adds transparency, which cannot then be changed
   _colors = new Array(30).fill(1).map(_ => colorPair())
+  const assignT = setTransparency(tf())
   const assignColors = colorAssigner(_colors)
 
   const fader = (width, height) => fadeOutEffect(document.getElementById('infobox'), width, height)
@@ -193,28 +210,29 @@ document.addEventListener('DOMContentLoaded', async function () {
     .then(items => {
       items = assignColors(items)
       items = items.map(resize(width))
-      const vecItems = makeVecs({ winWidth: width, winHeight: height, items })
+      items = items.map(assignT)
+
+      vecs = makeVecs({ winWidth: width, winHeight: height, items })
+      move = randomPosition(width, height)(vecs)
 
       const list = document.getElementById('dragula')
       list.append(...items)
 
       const movit = vecs => () => {
         console.log('moving the group')
-        vecs.forEach(v => v.next())
+        Object.keys(vecs).forEach(v => vecs[v].next())
       }
 
-      setInterval(movit(vecItems), 100)
+      setInterval(movit(vecs), 100)
 
       // TODO: looks like this is mostly what we want!
       // all that is needed is opacity, and something that actually changes the size via CSS props
 
-      // items = assignColors(items)
-      // items = items.map(resize(width))
       // items = items.map(move)
 
       // hrm. on end, it has to push the new-location back to the containing vector
       // ouch. how?
-      // dragify(items)
+      dragify(Object.keys(vecs))
 
       if (cb && typeof cb === 'function') { cb() }
     })
@@ -256,11 +274,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     builder(width, height)
   }))
 
-  // TODO: this no longer works
-  // have to modify the actual vecs we have saved
-  // since those contain the vals pushed to the DOM
   Mousetrap.bind('m', mouseCommand(() => {
-    const items = Array.from(document.querySelectorAll('.succulentText'))
-    selectSome(items)(10).map(move)
+    const elems = Array.from(document.querySelectorAll('.succulentText'))
+    selectSome(elems)(10).map(move)
   }))
 })

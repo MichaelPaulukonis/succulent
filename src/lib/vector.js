@@ -6,26 +6,27 @@ const vector = ({
   direction = { x: 1, y: 1 }
 }) => {
   const effectiveHeight = size.maxWidth / 2 // no simple way of knowing ???
-  if (location.x < 0 || location.x >= bounding.width || location.y < 0 || location.y > bounding.height) {
-    throw new Error('Value is outside boundaries')
-  }
+
   const self = { item, location: { ...location }, bounding: { ...bounding }, size: { ...size }, direction: { ...direction } }
+
   const position = pos => {
     self.item.style.left = `${pos.x}px`
     self.item.style.top = `${pos.y}px`
   }
+  self.paused = false
+
   self.next = () => {
+    if (self.paused) return self
+
     const newLocation = {
       x: self.location.x + self.direction.x,
       y: self.location.y + self.direction.y
     }
 
-    self.location = {
+    self.setLocation({
       x: Math.min(Math.max(newLocation.x, 0), self.bounding.width - self.size.maxWidth),
       y: Math.min(Math.max(newLocation.y, 0), self.bounding.height - effectiveHeight)
-    }
-
-    position(self.location)
+    })
 
     self.direction.x = (newLocation.x + self.size.maxWidth < self.bounding.width && newLocation.x >= 0)
       ? self.direction.x : -self.direction.x
@@ -40,7 +41,15 @@ const vector = ({
     self.diretion = { ...vec.direction }
     self.size = { ...vec.size }
   }
-  position(self.location)
+  self.setLocation = loc => {
+    if (loc.x < 0 || loc.x >= bounding.width || loc.y < 0 || loc.y > bounding.height) {
+      throw new Error('Value is outside boundaries')
+    }
+    self.location = { ...loc }
+    position(loc)
+    return self
+  }
+  self.setLocation(location)
   return self
 }
 
