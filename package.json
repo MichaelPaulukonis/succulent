@@ -1,7 +1,7 @@
 {
   "name": "succulent",
   "version": "0.0.2",
-  "main": "src/main.js",
+  "main": "src/app.js",
   "scripts": {
     "dev": "npm start",
     "start": "webpack-dev-server --watch",

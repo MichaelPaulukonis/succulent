@@ -2,6 +2,8 @@
 
 It is a project. That is a webpage. With text.
 
+<https://michaelpaulukonis.github.io/succulent/>
+
 ## things
 
 - looks neat <http://cadrpear.tx0.org/wordsalad/salad.html>
