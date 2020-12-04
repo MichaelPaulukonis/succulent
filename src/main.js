@@ -10,6 +10,10 @@ let move = () => { }
 let _colors = []
 let vecs = {}
 
+const config = {
+  paused: false
+}
+
 const selectSome = arr => toTake => arr.sort(_ => Math.round(Math.random()) - 0.5).slice(0, toTake)
 const tf = _ => Boolean(Math.round(Math.random()))
 const range = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min
@@ -195,6 +199,20 @@ const colorAssigner = colors => {
   }
 }
 
+const replaceText = elem => {
+  getText(1)
+    .then(text => {
+      elem.textContent = text
+    })
+}
+
+const randomTextElement = _ => {
+  const elems = Array.from(document.querySelectorAll('.succulentText'))
+  return selectSome(elems)(1)[0]
+}
+
+const oneRando = _ => replaceText(randomTextElement())
+
 document.addEventListener('DOMContentLoaded', async function () {
   var width = document.documentElement.clientWidth
   var height = document.documentElement.clientHeight
@@ -219,19 +237,14 @@ document.addEventListener('DOMContentLoaded', async function () {
       list.append(...items)
 
       const movit = vecs => () => {
-        console.log('moving the group')
+        if (config.paused) return
         Object.keys(vecs).forEach(v => vecs[v].next())
       }
 
       setInterval(movit(vecs), 100)
 
-      // TODO: looks like this is mostly what we want!
-      // all that is needed is opacity, and something that actually changes the size via CSS props
+      setInterval(oneRando, 2000)
 
-      // items = items.map(move)
-
-      // hrm. on end, it has to push the new-location back to the containing vector
-      // ouch. how?
       dragify(Object.keys(vecs))
 
       if (cb && typeof cb === 'function') { cb() }
@@ -258,14 +271,16 @@ document.addEventListener('DOMContentLoaded', async function () {
     return false
   }
 
-  for (let g = 1; g <= 3; g++) {
-    Mousetrap.bind(`${g}`, shiftShifter(g))
-  }
-
   const mouseCommand = fn => _ => {
     fn()
     return false
   }
+
+  for (let g = 1; g <= 3; g++) {
+    Mousetrap.bind(`${g}`, shiftShifter(g))
+  }
+
+  Mousetrap.bind('space', mouseCommand(() => { config.paused = !config.paused }))
 
   Mousetrap.bind('command+s', mouseCommand(saver))
 

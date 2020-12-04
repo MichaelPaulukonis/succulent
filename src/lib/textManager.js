@@ -21,7 +21,7 @@ export function corpus () {
   return [..._corpus]
 }
 
-export async function getText (items) {
+export async function getText (count) {
   if (_corpus.length === 0) {
     _corpus = await makeCorpus()
   }
@@ -36,7 +36,7 @@ export async function getText (items) {
   const munged = dissociate({ context, quaver, text: _corpus.join(' ').replace(/\s+/g, ' '), fragments })
 
   const tokens = tokenize(munged)
-  const newItems = glue(items)(tokens)
+  const lines = glue(count)(tokens)
 
-  return newItems
+  return lines
 }
