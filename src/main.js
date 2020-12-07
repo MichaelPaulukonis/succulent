@@ -29,10 +29,10 @@ const datestring = () => {
   return `${year}${month}${day}${hour}${min}${secs}`
 }
 
-const filenamer = (prefix) => {
+const filenamer = (infix) => {
   let frame = 0
   return () => {
-    const name = `succulent.${prefix}-${String(frame).padStart(6, '0')}.png`
+    const name = `succulent.${infix}-${String(frame).padStart(6, '0')}.png`
     frame += 1
     return name
   }
@@ -143,9 +143,8 @@ const saveImage = (width, height) => () => {
     namer = filenamer(datestring())
   }
   domToImage.toPng(document.getElementById('container'), {
-    bgcolor: '#000',
     width,
-    height: height * 2,
+    height,
     filter: node => node.id !== 'infobox'
   })
     .then(function (dataUrl) {
