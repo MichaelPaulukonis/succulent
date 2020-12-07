@@ -5,8 +5,6 @@ const vector = ({
   size = { maxWidth: 0, fontSize: 0 },
   direction = { x: 1, y: 1 }
 }) => {
-  const effectiveHeight = size.maxWidth / 2 // no simple way of knowing ???
-
   const self = { item, location: { ...location }, bounding: { ...bounding }, size: { ...size }, direction: { ...direction } }
 
   const position = pos => {
@@ -24,13 +22,13 @@ const vector = ({
     }
 
     self.setLocation({
-      x: Math.min(Math.max(newLocation.x, 0), self.bounding.width - self.size.maxWidth),
-      y: Math.min(Math.max(newLocation.y, 0), self.bounding.height - effectiveHeight)
+      x: Math.min(Math.max(newLocation.x, 0), self.bounding.width - self.item.clientWidth),
+      y: Math.min(Math.max(newLocation.y, 0), self.bounding.height - self.item.clientHeight)
     })
 
-    self.direction.x = (newLocation.x + self.size.maxWidth < self.bounding.width && newLocation.x >= 0)
+    self.direction.x = (newLocation.x + self.item.clientWidth < self.bounding.width && newLocation.x >= 0)
       ? self.direction.x : -self.direction.x
-    self.direction.y = (newLocation.y + effectiveHeight < self.bounding.height && newLocation.y >= 0)
+    self.direction.y = (newLocation.y + self.item.clientHeight < self.bounding.height && newLocation.y >= 0)
       ? self.direction.y : -self.direction.y
 
     return self
@@ -42,13 +40,11 @@ const vector = ({
     self.size = { ...vec.size }
   }
   self.setLocation = loc => {
-    if (loc.x < 0 || loc.x >= bounding.width || loc.y < 0 || loc.y > bounding.height) {
-      throw new Error('Value is outside boundaries')
-    }
     self.location = { ...loc }
     position(loc)
     return self
   }
+  self.item.style.minWidth = `${self.item.clientWidth}px`
   self.setLocation(location)
   return self
 }

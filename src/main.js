@@ -11,7 +11,10 @@ let _colors = []
 let vecs = {}
 
 const config = {
-  paused: false
+  paused: false,
+  numElements: 30,
+  mover: null,
+  rando: null
 }
 
 const selectSome = arr => toTake => arr.sort(_ => Math.round(Math.random()) - 0.5).slice(0, toTake)
@@ -40,10 +43,8 @@ const filenamer = (infix) => {
 
 let namer = null
 
-const dragify = items => {
+const dragify = _ => {
   const list = document.getElementById('dragula')
-  list.append(...items)
-
   draggable(list, '.drag-me')
   document.getElementById('page').addEventListener('DRAGSTART', (evt) => {
     const item = vecs[evt.target.id]
@@ -61,11 +62,14 @@ const dragify = items => {
   })
 }
 
-const clearText = () => {
+const cleanSlate = () => {
   const parent = document.getElementById('dragula')
   while (parent.firstChild) {
     parent.removeChild(parent.firstChild)
   }
+  vecs = {}
+  clearInterval(config.mover)
+  clearInterval(config.rando)
 }
 
 const makeVecs = ({ winWidth, winHeight, items }) => {
@@ -118,7 +122,7 @@ const group = items => {
 }
 
 const createTextElements = async _ => {
-  const frags = await getText(30)
+  const frags = await getText(config.numElements)
   const items = buildListElements(frags)
   return group(items)
 }
@@ -232,7 +236,9 @@ const colorAssigner = colors => {
 const replaceText = elem => {
   getText(1)
     .then(text => {
-      elem.textContent = text
+      if (text[0].trim().length > 0) {
+        elem.textContent = text[0]
+      }
     })
 }
 
@@ -241,14 +247,16 @@ const randomTextElement = _ => {
   return selectSome(elems)(1)[0]
 }
 
-const oneRando = _ => replaceText(randomTextElement())
+const oneRando = _ => {
+  if (!config.paused) replaceText(randomTextElement())
+}
 
 document.addEventListener('DOMContentLoaded', async function () {
   var width = document.documentElement.clientWidth
   var height = document.documentElement.clientHeight
 
   saver = saveImage(width, height)
-  _colors = new Array(30).fill(1).map(_ => colorPair())
+  _colors = new Array(config.numElements).fill(1).map(_ => colorPair())
   const assignT = setTransparency(tf())
   const assignColors = colorAssigner(_colors)
 
@@ -260,22 +268,22 @@ document.addEventListener('DOMContentLoaded', async function () {
       items = items.map(resize(width))
       items = items.map(assignT)
 
-      vecs = makeVecs({ winWidth: width, winHeight: height, items })
-      move = randomPosition(width, height)(vecs)
-
       const list = document.getElementById('dragula')
       list.append(...items)
+
+      vecs = makeVecs({ winWidth: width, winHeight: height, items })
+      move = randomPosition(width, height)(vecs)
 
       const movit = vecs => () => {
         if (config.paused) return
         Object.keys(vecs).forEach(v => vecs[v].next())
       }
 
-      setInterval(movit(vecs), 100)
+      config.mover = setInterval(movit(vecs), 100)
 
-      setInterval(oneRando, 2000)
+      config.rando = setInterval(oneRando, 2000)
 
-      dragify(Object.keys(vecs))
+      dragify()
 
       if (cb && typeof cb === 'function') { cb() }
     })
@@ -315,7 +323,7 @@ document.addEventListener('DOMContentLoaded', async function () {
   Mousetrap.bind('command+s', mouseCommand(saver))
 
   Mousetrap.bind('t', mouseCommand(() => {
-    clearText()
+    cleanSlate()
     builder(width, height)
   }))
 
