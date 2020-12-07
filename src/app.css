@@ -62,3 +62,7 @@ li {
 #succulentText {
     display: none;
 }
+
+#container {
+    padding: 1px;
+}

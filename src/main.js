@@ -1,5 +1,5 @@
 import { draggable } from '@dom-native/draggable'
-import * as htmlToImage from 'html-to-image'
+import * as domToImage from 'dom-to-image-more'
 import download from 'downloadjs'
 import Mousetrap from 'mousetrap'
 import { getText } from './lib/textManager'
@@ -17,6 +17,28 @@ const config = {
 const selectSome = arr => toTake => arr.sort(_ => Math.round(Math.random()) - 0.5).slice(0, toTake)
 const tf = _ => Boolean(Math.round(Math.random()))
 const range = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min
+
+const datestring = () => {
+  const d = new Date()
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  const hour = String(d.getHours()).padStart(2, '0')
+  const min = String(d.getMinutes()).padStart(2, '0')
+  const secs = String(d.getSeconds()).padStart(2, '0')
+  return `${year}${month}${day}${hour}${min}${secs}`
+}
+
+const filenamer = (prefix) => {
+  let frame = 0
+  return () => {
+    const name = `succulent.${prefix}-${String(frame).padStart(6, '0')}.png`
+    frame += 1
+    return name
+  }
+}
+
+let namer = null
 
 const dragify = items => {
   const list = document.getElementById('dragula')
@@ -116,9 +138,18 @@ const buildListElements = fragments => {
 }
 
 const saveImage = (width, height) => () => {
-  htmlToImage.toPng(document.getElementById('page'), { backgroundColor: '#000', width, height })
+  // well, uh..... this will reset each time, which
+  if (namer === null) {
+    namer = filenamer(datestring())
+  }
+  domToImage.toPng(document.getElementById('container'), {
+    bgcolor: '#000',
+    width,
+    height: height * 2,
+    filter: node => node.id !== 'infobox'
+  })
     .then(function (dataUrl) {
-      download(dataUrl, 'my-node.png')
+      download(dataUrl, namer())
     })
 }
 

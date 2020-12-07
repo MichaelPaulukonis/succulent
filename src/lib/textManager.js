@@ -3,18 +3,22 @@ import tumblrRandomPost from './tumblr_random'
 import dissociate from './dissociate'
 import tokenize from './tokenize'
 import glue from './rebuild'
+import wordfilter from 'wordfilter'
 
 let _corpus = []
 
 const rand = max => Math.floor(Math.random() * max)
 
 export async function makeCorpus () {
+  let corp
   try {
-    _corpus = await tumblrRandomPost()
+    corp = await tumblrRandomPost()
   } catch (_) {
-    _corpus = defaultText.lines
+    corp = defaultText.lines
   }
-  return _corpus
+
+  return corp.filter(line => !wordfilter.blacklisted(line))
+    .join(' ').replace(/\s+/g, ' ')
 }
 
 export function corpus () {
@@ -33,7 +37,7 @@ export async function getText (count) {
   const cntxs = [1, 1, 1, 2, 2, 3, 5]
   const context = cntxs[rand(cntxs.length)]
   // console.log(`fragSize: ${fragments} quaver: ${quaver} constext: ${context}`)
-  const munged = dissociate({ context, quaver, text: _corpus.join(' ').replace(/\s+/g, ' '), fragments })
+  const munged = dissociate({ context, quaver, text: _corpus, fragments })
 
   const tokens = tokenize(munged)
   const lines = glue(count)(tokens)
