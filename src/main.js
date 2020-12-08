@@ -14,7 +14,11 @@ const config = {
   paused: false,
   numElements: 30,
   mover: null,
-  rando: null
+  rando: null,
+  capturingFrames: false,
+  captureCount: 0,
+  captureLimit: 100,
+  captureOverride: true
 }
 
 const selectSome = arr => toTake => arr.sort(_ => Math.round(Math.random()) - 0.5).slice(0, toTake)
@@ -32,16 +36,19 @@ const datestring = () => {
   return `${year}${month}${day}${hour}${min}${secs}`
 }
 
-const filenamer = (infix) => {
+const sequentialNameFactory = _ => {
   let frame = 0
   return () => {
-    const name = `succulent.${infix}-${String(frame).padStart(6, '0')}.png`
+    // const name = `succulent.${datestring()}-${String(frame).padStart(6, '0')}.png`
+    const name = saveName(String(frame).padStart(6, '0'))
     frame += 1
     return name
   }
 }
 
-let namer = null
+const saveName = infix => `succulent.${datestring()}${infix ? `-${infix}` : ''}.png`
+
+let frameNamer = null
 
 const dragify = _ => {
   const list = document.getElementById('dragula')
@@ -141,11 +148,7 @@ const buildListElements = fragments => {
   })
 }
 
-const saveImage = (width, height) => () => {
-  // well, uh..... this will reset each time, which
-  if (namer === null) {
-    namer = filenamer(datestring())
-  }
+const saveImage = (width, height) => (namer = saveName) => {
   domToImage.toPng(document.getElementById('container'), {
     width,
     height,
@@ -251,6 +254,13 @@ const oneRando = _ => {
   if (!config.paused) replaceText(randomTextElement())
 }
 
+const saveFrames = () => {
+  if (!config.capturingFrames) {
+    config.captureCount = 0
+  }
+  config.capturingFrames = !config.capturingFrames
+}
+
 document.addEventListener('DOMContentLoaded', async function () {
   var width = document.documentElement.clientWidth
   var height = document.documentElement.clientHeight
@@ -277,6 +287,18 @@ document.addEventListener('DOMContentLoaded', async function () {
       const movit = vecs => () => {
         if (config.paused) return
         Object.keys(vecs).forEach(v => vecs[v].next())
+        if (config.capturingFrames) {
+          console.log('capturing frame')
+          if (frameNamer === null) {
+            frameNamer = sequentialNameFactory()
+          }
+          saver(frameNamer)
+          config.captureCount += 1
+          if (config.captureCount > config.captureLimit) {
+            config.capturingFrames = false
+            config.captureCount = 0
+          }
+        }
       }
 
       config.mover = setInterval(movit(vecs), 100)
@@ -321,6 +343,8 @@ document.addEventListener('DOMContentLoaded', async function () {
   Mousetrap.bind('space', mouseCommand(() => { config.paused = !config.paused }))
 
   Mousetrap.bind('command+s', mouseCommand(saver))
+
+  Mousetrap.bind('command+a', mouseCommand(saveFrames))
 
   Mousetrap.bind('t', mouseCommand(() => {
     cleanSlate()
