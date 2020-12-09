@@ -17,8 +17,8 @@ const config = {
   rando: null,
   capturingFrames: false,
   captureCount: 0,
-  captureLimit: 100,
-  captureOverride: true
+  captureLimit: 500,
+  captureN: 3
 }
 
 const selectSome = arr => toTake => arr.sort(_ => Math.round(Math.random()) - 0.5).slice(0, toTake)
@@ -38,15 +38,15 @@ const datestring = () => {
 
 const sequentialNameFactory = _ => {
   let frame = 0
+  const date = datestring()
   return () => {
-    // const name = `succulent.${datestring()}-${String(frame).padStart(6, '0')}.png`
-    const name = saveName(String(frame).padStart(6, '0'))
+    const name = saveName(`${date}-${String(frame).padStart(6, '0')}`)
     frame += 1
     return name
   }
 }
 
-const saveName = infix => `succulent.${datestring()}${infix ? `-${infix}` : ''}.png`
+const saveName = infix => `succulent.${infix ? `${infix}` : ''}.png`
 
 let frameNamer = null
 
@@ -148,7 +148,7 @@ const buildListElements = fragments => {
   })
 }
 
-const saveImage = (width, height) => (namer = saveName) => {
+const saveImage = (width, height) => (namer = () => saveName(datestring())) => {
   domToImage.toPng(document.getElementById('container'), {
     width,
     height,
@@ -288,15 +288,18 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (config.paused) return
         Object.keys(vecs).forEach(v => vecs[v].next())
         if (config.capturingFrames) {
-          console.log('capturing frame')
-          if (frameNamer === null) {
-            frameNamer = sequentialNameFactory()
-          }
-          saver(frameNamer)
           config.captureCount += 1
-          if (config.captureCount > config.captureLimit) {
-            config.capturingFrames = false
-            config.captureCount = 0
+          if (config.captureCount % config.captureN === 1) {
+            console.log('capturing frame')
+            if (frameNamer === null) {
+              frameNamer = sequentialNameFactory()
+            }
+            saver(frameNamer)
+            if (config.captureCount > config.captureLimit * config.captureN) {
+              config.capturingFrames = false
+              config.captureCount = 0
+              frameNamer = null
+            }
           }
         }
       }
