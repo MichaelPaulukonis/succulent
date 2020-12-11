@@ -49,7 +49,7 @@ processAll() {
         moveit $p $TARGET_ROOT/$p
         buildit $p $TARGET_ROOT/$p
     done
-    collect
+    # collect
 }
 
 mkmp4() {

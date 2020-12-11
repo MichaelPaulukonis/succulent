@@ -7,18 +7,21 @@ import { vector } from './lib/vector'
 
 let saver = () => { }
 let move = () => { }
-let _colors = []
 let vecs = {}
 
 const config = {
   paused: false,
-  numElements: 30,
+  numElements: 5,
   mover: null,
   rando: null,
   capturingFrames: false,
   captureCount: 0,
   captureLimit: 500,
-  captureN: 3
+  captureN: 3,
+  randoTextIntervalFrames: 50,
+  nextFrameInterval: 100,
+  frameCount: 0,
+  colorShiftInterval: 500
 }
 
 const selectSome = arr => toTake => arr.sort(_ => Math.round(Math.random()) - 0.5).slice(0, toTake)
@@ -251,7 +254,8 @@ const randomTextElement = _ => {
 }
 
 const oneRando = _ => {
-  if (!config.paused) replaceText(randomTextElement())
+  // TODO: also need to resize the vector
+  replaceText(randomTextElement())
 }
 
 const saveFrames = () => {
@@ -266,9 +270,10 @@ document.addEventListener('DOMContentLoaded', async function () {
   var height = document.documentElement.clientHeight
 
   saver = saveImage(width, height)
-  _colors = new Array(config.numElements).fill(1).map(_ => colorPair())
-  const assignT = setTransparency(tf())
-  const assignColors = colorAssigner(_colors)
+
+  // by keeping them outside of builder, the color-sets stay contant
+  const colors = new Array(config.numElements).fill(1).map(_ => colorPair())
+  const assignColors = colorAssigner(colors)
 
   const fader = (width, height) => fadeOutEffect(document.getElementById('infobox'), width, height)
 
@@ -276,7 +281,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     .then(items => {
       items = assignColors(items)
       items = items.map(resize(width))
-      items = items.map(assignT)
+      items = items.map(setTransparency(tf()))
 
       const list = document.getElementById('dragula')
       list.append(...items)
@@ -286,6 +291,10 @@ document.addEventListener('DOMContentLoaded', async function () {
 
       const movit = vecs => () => {
         if (config.paused) return
+        config.frameCount += 1
+        if (config.frameCount % config.randoTextIntervalFrames === 0) {
+          oneRando()
+        }
         Object.keys(vecs).forEach(v => vecs[v].next())
         if (config.capturingFrames) {
           config.captureCount += 1
@@ -304,9 +313,8 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
       }
 
-      config.mover = setInterval(movit(vecs), 100)
-
-      config.rando = setInterval(oneRando, 2000)
+      // TODO: movit is the frame, fire everything from there
+      config.mover = setInterval(movit(vecs), config.nextFrameInterval)
 
       dragify()
 
@@ -315,6 +323,8 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   builder(width, height, fader)
 
+  // TODO: this should be called from movit
+  // which is the frame thingy
   const shiftShifter = group => {
     let interval
     let on = false
@@ -322,7 +332,7 @@ document.addEventListener('DOMContentLoaded', async function () {
       if (on) {
         clearInterval(interval)
       } else {
-        interval = setInterval(colorShiftGroup(group), 500)
+        interval = setInterval(colorShiftGroup(group), config.colorShiftInterval)
       }
       on = !on
     }

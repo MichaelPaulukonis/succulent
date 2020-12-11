@@ -2,3 +2,6 @@ node_modules
 .env
 .vscode/
 dist/
+
+## notes etc
+p5js.draw.js

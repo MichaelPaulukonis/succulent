@@ -3,9 +3,17 @@ const vector = ({
   location = { x: 0, y: 0 },
   bounding = { width: 0, height: 0 },
   size = { maxWidth: 0, fontSize: 0 },
-  direction = { x: 1, y: 1 }
+  direction = { x: 1, y: 1 },
+  opacity = 100
 }) => {
-  const self = { item, location: { ...location }, bounding: { ...bounding }, size: { ...size }, direction: { ...direction } }
+  const self = {
+    item,
+    location: { ...location },
+    bounding: { ...bounding },
+    size: { ...size },
+    direction: { ...direction },
+    opacity
+  }
 
   const position = pos => {
     self.item.style.left = `${pos.x}px`
