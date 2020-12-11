@@ -7,7 +7,7 @@ import { vector } from './lib/vector'
 
 let saver = () => { }
 let move = () => { }
-let vecs = {}
+let agents = {}
 
 const config = {
   paused: false,
@@ -57,14 +57,14 @@ const dragify = _ => {
   const list = document.getElementById('dragula')
   draggable(list, '.drag-me')
   document.getElementById('page').addEventListener('DRAGSTART', (evt) => {
-    const item = vecs[evt.target.id]
+    const item = agents[evt.target.id]
     item.paused = true
     let idx = evt.target.style.zIndex || 0
     idx++
     evt.target.style.zIndex = idx
   })
   document.getElementById('page').addEventListener('DRAGEND', (evt) => {
-    const item = vecs[evt.target.id]
+    const item = agents[evt.target.id]
     const x = parseInt(evt.target.style.left, 10)
     const y = parseInt(evt.target.style.top, 10)
     item.setLocation({ x, y })
@@ -77,13 +77,13 @@ const cleanSlate = () => {
   while (parent.firstChild) {
     parent.removeChild(parent.firstChild)
   }
-  vecs = {}
+  agents = {}
   clearInterval(config.mover)
   clearInterval(config.rando)
 }
 
-const makeVecs = ({ winWidth, winHeight, items }) => {
-  const maker = makeVec({ width: winWidth, height: winHeight })
+const makeAgents = ({ winWidth, winHeight, items }) => {
+  const maker = makeAgent({ width: winWidth, height: winHeight })
   const sizer = randomSize(winWidth)
   const locator = () => {
     var maxWidth = Math.floor(Math.random() * (winWidth / 2 - 100)) + 100
@@ -94,25 +94,25 @@ const makeVecs = ({ winWidth, winHeight, items }) => {
     return { x, y }
   }
 
-  const vecs = {}
+  const _agents = {}
   items.forEach(item => {
     const location = locator()
     const size = sizer()
-    vecs[item.id] = maker({ item, location, size })
+    _agents[item.id] = maker({ item, location, size })
   })
 
-  return vecs
+  return _agents
 }
 
-const makeVec = ({ width, height }) => ({ item, location, size }) => {
-  const vec = vector({
+const makeAgent = ({ width, height }) => ({ item, location, size }) => {
+  const agent = vector({
     item,
     location,
     bounding: { width, height },
     size,
     direction: { x: range(-5, 5), y: range(-5, 5) }
   })
-  return vec
+  return agent
 }
 
 const group = items => {
@@ -176,13 +176,13 @@ const fadeOutEffect = (target) => {
   }, 400)
 }
 
-const randomPosition = (winWidth, winHeight) => vecs => elem => {
+const randomPosition = (winWidth, winHeight) => agents => elem => {
   const maxWidth = Math.floor(Math.random() * (winWidth / 2 - 100)) + 100
 
   const x = range(0, winWidth - maxWidth)
   const y = range(0, winHeight - 100)
 
-  const item = vecs[elem.id]
+  const item = agents[elem.id]
   item.setLocation({ x, y })
 
   return item
@@ -265,7 +265,31 @@ const saveFrames = () => {
   config.capturingFrames = !config.capturingFrames
 }
 
-document.addEventListener('DOMContentLoaded', async function () {
+const draw = agents => () => {
+  if (config.paused) return
+  config.frameCount += 1
+  if (config.frameCount % config.randoTextIntervalFrames === 0) {
+    oneRando()
+  }
+  Object.keys(agents).forEach(v => agents[v].next())
+  if (config.capturingFrames) {
+    config.captureCount += 1
+    if (config.captureCount % config.captureN === 1) {
+      console.log('capturing frame')
+      if (frameNamer === null) {
+        frameNamer = sequentialNameFactory()
+      }
+      saver(frameNamer)
+      if (config.captureCount > config.captureLimit * config.captureN) {
+        config.capturingFrames = false
+        config.captureCount = 0
+        frameNamer = null
+      }
+    }
+  }
+}
+
+const succulent = function () {
   var width = document.documentElement.clientWidth
   var height = document.documentElement.clientHeight
 
@@ -286,35 +310,11 @@ document.addEventListener('DOMContentLoaded', async function () {
       const list = document.getElementById('dragula')
       list.append(...items)
 
-      vecs = makeVecs({ winWidth: width, winHeight: height, items })
-      move = randomPosition(width, height)(vecs)
-
-      const movit = vecs => () => {
-        if (config.paused) return
-        config.frameCount += 1
-        if (config.frameCount % config.randoTextIntervalFrames === 0) {
-          oneRando()
-        }
-        Object.keys(vecs).forEach(v => vecs[v].next())
-        if (config.capturingFrames) {
-          config.captureCount += 1
-          if (config.captureCount % config.captureN === 1) {
-            console.log('capturing frame')
-            if (frameNamer === null) {
-              frameNamer = sequentialNameFactory()
-            }
-            saver(frameNamer)
-            if (config.captureCount > config.captureLimit * config.captureN) {
-              config.capturingFrames = false
-              config.captureCount = 0
-              frameNamer = null
-            }
-          }
-        }
-      }
+      agents = makeAgents({ winWidth: width, winHeight: height, items })
+      move = randomPosition(width, height)(agents)
 
       // TODO: movit is the frame, fire everything from there
-      config.mover = setInterval(movit(vecs), config.nextFrameInterval)
+      config.mover = setInterval(draw(agents), config.nextFrameInterval)
 
       dragify()
 
@@ -368,4 +368,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     const elems = Array.from(document.querySelectorAll('.succulentText'))
     selectSome(elems)(10).map(move)
   }))
-})
+}
+
+document.addEventListener('DOMContentLoaded', succulent)
