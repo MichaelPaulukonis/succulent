@@ -1,3 +1,7 @@
+// TODO: take apart the 2D vector components
+// and add a 1D vector component - see "vectorMod" (ganked from OBSCURUS)
+// and the "agent"-thing can use both
+// for example, color and speed might have their own vector things.....
 const vector = ({
   item,
   location = { x: 0, y: 0 },

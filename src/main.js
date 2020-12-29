@@ -1,9 +1,9 @@
 import { draggable } from '@dom-native/draggable'
-import * as domToImage from 'dom-to-image-more'
-import download from 'downloadjs'
 import Mousetrap from 'mousetrap'
 import { getText } from './lib/textManager'
 import { vector } from './lib/vector'
+import { sequentialNameFactory, saveImage } from './lib/namer'
+import { setLoop } from './lib/drawLoop'
 
 let saver = () => { }
 let move = () => { }
@@ -11,7 +11,7 @@ let agents = {}
 
 const config = {
   paused: false,
-  numElements: 5,
+  numElements: 30,
   mover: null,
   rando: null,
   capturingFrames: false,
@@ -27,29 +27,6 @@ const config = {
 const selectSome = arr => toTake => arr.sort(_ => Math.round(Math.random()) - 0.5).slice(0, toTake)
 const tf = _ => Boolean(Math.round(Math.random()))
 const range = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min
-
-const datestring = () => {
-  const d = new Date()
-  const year = d.getFullYear()
-  const month = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  const hour = String(d.getHours()).padStart(2, '0')
-  const min = String(d.getMinutes()).padStart(2, '0')
-  const secs = String(d.getSeconds()).padStart(2, '0')
-  return `${year}${month}${day}${hour}${min}${secs}`
-}
-
-const sequentialNameFactory = _ => {
-  let frame = 0
-  const date = datestring()
-  return () => {
-    const name = saveName(`${date}-${String(frame).padStart(6, '0')}`)
-    frame += 1
-    return name
-  }
-}
-
-const saveName = infix => `succulent.${infix ? `${infix}` : ''}.png`
 
 let frameNamer = null
 
@@ -149,17 +126,6 @@ const buildListElements = fragments => {
     li.style.display = 'block'
     return li
   })
-}
-
-const saveImage = (width, height) => (namer = () => saveName(datestring())) => {
-  domToImage.toPng(document.getElementById('container'), {
-    width,
-    height,
-    filter: node => node.id !== 'infobox'
-  })
-    .then(function (dataUrl) {
-      download(dataUrl, namer())
-    })
 }
 
 const fadeOutEffect = (target) => {
@@ -314,7 +280,9 @@ const succulent = function () {
       move = randomPosition(width, height)(agents)
 
       // TODO: movit is the frame, fire everything from there
-      config.mover = setInterval(draw(agents), config.nextFrameInterval)
+      // config.mover = setInterval(draw(agents), config.nextFrameInterval)
+
+      setLoop(draw(agents))
 
       dragify()
 
