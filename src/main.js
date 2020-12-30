@@ -13,7 +13,6 @@ const config = {
   paused: false,
   numElements: 30,
   mover: null,
-  rando: null,
   capturingFrames: false,
   captureCount: 0,
   captureLimit: 500,
@@ -33,6 +32,8 @@ let frameNamer = null
 const dragify = _ => {
   const list = document.getElementById('dragula')
   draggable(list, '.drag-me')
+  // TODO: it would be nice if we could notify the agents they are moving or have been moved
+  // and THEY could decide what to do
   document.getElementById('page').addEventListener('DRAGSTART', (evt) => {
     const item = agents[evt.target.id]
     item.paused = true
@@ -55,8 +56,8 @@ const cleanSlate = () => {
     parent.removeChild(parent.firstChild)
   }
   agents = {}
-  clearInterval(config.mover)
-  clearInterval(config.rando)
+  // TODO: figure out how this is to be done with the new loop
+  // clearInterval(config.mover)
 }
 
 const makeAgents = ({ winWidth, winHeight, items }) => {
@@ -110,22 +111,20 @@ const group = items => {
 
 const createTextElements = async _ => {
   const frags = await getText(config.numElements)
-  const items = buildListElements(frags)
+  const items = frags.map(buildListElement)
   return group(items)
 }
 
 const randomId = _ => (Math.random() * 0x1000000000).toString(36)
 
-const buildListElements = fragments => {
-  return fragments.map(line => {
-    const li = document.createElement('li')
-    li.className = 'drag-me succulentText'
-    li.id = randomId()
-    li.textContent = line
-    li.style.position = 'absolute'
-    li.style.display = 'block'
-    return li
-  })
+const buildListElement = line => {
+  const li = document.createElement('li')
+  li.className = 'drag-me succulentText'
+  li.id = randomId()
+  li.textContent = line
+  li.style.position = 'absolute'
+  li.style.display = 'block'
+  return li
 }
 
 const fadeOutEffect = (target) => {
@@ -231,6 +230,21 @@ const saveFrames = () => {
   config.capturingFrames = !config.capturingFrames
 }
 
+function capture () {
+  config.captureCount += 1
+  if (config.captureCount % config.captureN === 1) {
+    if (frameNamer === null) {
+      frameNamer = sequentialNameFactory()
+    }
+    saver(frameNamer)
+    if (config.captureCount > config.captureLimit * config.captureN) {
+      config.capturingFrames = false
+      config.captureCount = 0
+      frameNamer = null
+    }
+  }
+}
+
 const draw = agents => () => {
   if (config.paused) return
   config.frameCount += 1
@@ -238,21 +252,10 @@ const draw = agents => () => {
     oneRando()
   }
   Object.keys(agents).forEach(v => agents[v].next())
-  if (config.capturingFrames) {
-    config.captureCount += 1
-    if (config.captureCount % config.captureN === 1) {
-      console.log('capturing frame')
-      if (frameNamer === null) {
-        frameNamer = sequentialNameFactory()
-      }
-      saver(frameNamer)
-      if (config.captureCount > config.captureLimit * config.captureN) {
-        config.capturingFrames = false
-        config.captureCount = 0
-        frameNamer = null
-      }
-    }
-  }
+  // TODO: hey, what about being paused and dragging things around?
+  // don't capture the drag, but the drop?
+  // that'd be neat.
+  if (config.capturingFrames) capture()
 }
 
 const succulent = function () {
@@ -261,7 +264,8 @@ const succulent = function () {
 
   saver = saveImage(width, height)
 
-  // by keeping them outside of builder, the color-sets stay contant
+  // by keeping them outside of builder, the color-sets stay constant
+  // not saying this is by design or desirable, just point it out
   const colors = new Array(config.numElements).fill(1).map(_ => colorPair())
   const assignColors = colorAssigner(colors)
 
@@ -279,12 +283,8 @@ const succulent = function () {
       agents = makeAgents({ winWidth: width, winHeight: height, items })
       move = randomPosition(width, height)(agents)
 
-      // TODO: movit is the frame, fire everything from there
-      // config.mover = setInterval(draw(agents), config.nextFrameInterval)
-
-      setLoop(draw(agents))
-
       dragify()
+      setLoop(draw(agents))
 
       if (cb && typeof cb === 'function') { cb() }
     })
