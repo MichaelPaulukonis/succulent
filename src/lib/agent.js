@@ -15,20 +15,18 @@ const Agent = ({
     opacity
   }
 
-  // needs clientWidth, clientHeight
-  // which are DOM props. ouch. ugh
   const vec = vector({
     location,
-    bounding,
+    bounding: { width: bounding.width - item.clientWidth, height: bounding.height - item.clientHeight },
     size,
-    direction,
-    item: { width: item.clientWidth, height: item.clientHeight }
+    direction
   })
 
   const position = pos => {
     self.item.style.left = `${pos.x}px`
     self.item.style.top = `${pos.y}px`
   }
+
   self.paused = false
 
   self.next = () => {
@@ -38,7 +36,11 @@ const Agent = ({
     return vec
   }
 
-  self.setLocation = vec.setLocation
+  self.setLocation = loc => {
+    vec.setLocation(loc)
+    position(loc)
+    return self
+  }
 
   self.item.style.minWidth = `${self.item.clientWidth}px`
   position(location)
