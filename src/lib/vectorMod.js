@@ -23,4 +23,4 @@ const vector = ({
   return self
 }
 
-module.exports = { vector }
+export default { vector }

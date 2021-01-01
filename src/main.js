@@ -1,7 +1,7 @@
 import { draggable } from '@dom-native/draggable'
 import Mousetrap from 'mousetrap'
 import { getText } from './lib/textManager'
-import { vector } from './lib/vector'
+import { Agent } from './lib/agent'
 import { sequentialNameFactory, saveImage } from './lib/namer'
 import { setLoop } from './lib/drawLoop'
 
@@ -83,7 +83,7 @@ const makeAgents = ({ winWidth, winHeight, items }) => {
 }
 
 const makeAgent = ({ width, height }) => ({ item, location, size }) => {
-  const agent = vector({
+  const agent = Agent({
     item,
     location,
     bounding: { width, height },
