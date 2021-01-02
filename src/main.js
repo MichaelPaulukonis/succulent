@@ -56,8 +56,6 @@ const cleanSlate = () => {
     parent.removeChild(parent.firstChild)
   }
   agents = {}
-  // TODO: figure out how this is to be done with the new loop
-  // clearInterval(config.mover)
 }
 
 const makeAgents = ({ winWidth, winHeight, items }) => {
@@ -226,6 +224,7 @@ const oneRando = _ => {
 const saveFrames = () => {
   if (!config.capturingFrames) {
     config.captureCount = 0
+    frameNamer = sequentialNameFactory()
   }
   config.capturingFrames = !config.capturingFrames
 }
@@ -259,8 +258,15 @@ const draw = agents => () => {
 }
 
 const succulent = function () {
-  var width = document.documentElement.clientWidth
+  // so we can change the width
+  // if this will be dynamic (page-resize, etc)
+  // the "saver" will also have to be updated
+  var width = 800 // document.documentElement.clientWidth
   var height = document.documentElement.clientHeight
+
+  const container = document.getElementById('container')
+  container.style.marginLeft = `${(document.documentElement.clientWidth - width) / 2}px`
+  container.style.width = `${width}px`
 
   saver = saveImage(width, height)
 

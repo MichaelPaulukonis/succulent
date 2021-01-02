@@ -25,7 +25,7 @@ export const sequentialNameFactory = _ => {
 }
 
 export const saveImage = (width, height) => (namer = () => saveName(datestring())) => {
-  domToImage.toPng(document.getElementById('container'), {
+  domToImage.toPng(document.getElementById('dragula'), {
     width,
     height,
     filter: node => node.id !== 'infobox'

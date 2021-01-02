@@ -56,7 +56,7 @@ mkmp4() {
     #  ffmpeg -r 30 -f image2 -s 500x500 -i "$1-%06d.png" -vcodec libx264 -crf 17 -pix_fmt yuv420p $1.mp4
     # https://hamelot.io/visualization/using-ffmpeg-to-convert-a-set-of-images-into-a-video/
     # -r = frameRate
-    ffmpeg -r 15 -f image2 -s 500x500 -pattern_type glob -i '*.png' -vcodec libx264 -crf 17 -pix_fmt yuv420p $1.mp4
+    ffmpeg  -r 15 -f image2 -pattern_type glob -i '*.png' -vcodec libx264 -crf 17 -pix_fmt yuv420p -vf "pad=ceil(iw/2)*2:ceil(ih/2)*2" $1.mp4 
 }
 
 mkgif() {
